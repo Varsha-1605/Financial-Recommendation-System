@@ -268,7 +268,7 @@ def setup_data_and_vectorstore():
     max_retries = 5
     retry_delay = 2  # seconds
 
-    persist_directory = 'A:/Users/VARSHA/Downloads/Langchain/Working/'
+    persist_directory = './chroma_db'
 
     # Check if the directory exists
     if os.path.exists(persist_directory):

@@ -139,7 +139,7 @@ zstandard
 Faker
 python-dateutil
 requests
-shutil
+
 traceback
 
 

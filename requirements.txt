@@ -140,7 +140,6 @@ Faker
 python-dateutil
 requests
 
-traceback
 
 
 

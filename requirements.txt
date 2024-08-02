@@ -31,7 +31,7 @@ gitdb
 GitPython
 greenlet
 h11
-hnswlib==0.7.6
+hnswlib==0.8.0
 httptools
 huggingface-hub
 httpx

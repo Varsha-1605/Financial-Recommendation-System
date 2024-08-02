@@ -28,7 +28,7 @@ import tempfile
 
 
 
-openai_api_key = 'sk-JiVRzYNpvTXkimdHJyJyELnB73NoC_O-WZCusFHKo8T3BlbkFJr9eRZfNuOIkFlQT3zl3b0RLCubuMMAAbaqXHSIlVQA'
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 from langchain.globals import set_verbose
 # Set verbosity level to True to enable detailed logging

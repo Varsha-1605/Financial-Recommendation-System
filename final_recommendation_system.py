@@ -18,7 +18,11 @@ import os
 import shutil
 import traceback
 import sys
-from dotenv import load_dotenv
+
+
+
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+
 from langchain.globals import set_verbose
 # Set verbosity level to True to enable detailed logging
 set_verbose(True)
@@ -51,8 +55,7 @@ st.markdown("""
 
 
 
-# Load environment variables
-load_dotenv()
+
 
 def global_exception_handler(exctype, value, tb):
     st.error("An unexpected error occurred. Our team has been notified. 🤖")

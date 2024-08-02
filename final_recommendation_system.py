@@ -23,10 +23,12 @@ import os
 import shutil
 import traceback
 import sys
+import tempfile
 
 
 
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 from langchain.globals import set_verbose
 # Set verbosity level to True to enable detailed logging
@@ -263,7 +265,7 @@ def setup_data_and_vectorstore():
     dataset = generate_dataset(50, months)
 
     df = pd.DataFrame(dataset)
-    df.to_csv("product_info.csv", index=False)
+    # df.to_csv("product_info.csv", index=False)
 
     df['content'] = [f"Based on the following customer data: {data}, suggest suitable banking lending products." for data in dataset]
 
@@ -271,12 +273,12 @@ def setup_data_and_vectorstore():
     for _, row in df.iterrows():
         documents.append(Document(page_content=row["content"], metadata={"class": row["Age"]}))
 
-    openai_embeddings = OpenAIEmbeddings(api_key=os.getenv('OPENAI_API_KEY'))
+    openai_embeddings = OpenAIEmbeddings(api_key=openai_api_key)
 
     max_retries = 5
     retry_delay = 2  # seconds
 
-    persist_directory = './chroma_db'
+    persist_directory = tempfile.mkdtemp()
 
     # Check if the directory exists
     if os.path.exists(persist_directory):
@@ -311,11 +313,11 @@ chroma_store = get_vectorstore()
 
 def setup_retrieval_qa(chroma_store):
     try:
-        openapi_key = os.getenv('OPENAI_API_KEY')
-        if not openapi_key:
+        openai_api_key = st.secrets["OPENAI_API_KEY"]
+        if not openai_api_key:
             raise ValueError("OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.")
         
-        openai_llm = ChatOpenAI(api_key=openapi_key, model="gpt-3.5-turbo")
+        openai_llm = ChatOpenAI(api_key=openai_api_key, model="gpt-3.5-turbo")
 
         prompt_template = PromptTemplate(
             input_variables=["context"],

@@ -1012,108 +1012,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# # Easter egg: Hidden feature
-# if st.sidebar.checkbox("🔒 Unlock Hidden Feature", key="hidden_feature"):
-#     st.sidebar.success("You've discovered a hidden feature! 🎉")
-#     st.sidebar.markdown("""
-#         <div class="custom-card neon-glow">
-#             <h4>AI Stock Predictor</h4>
-#             <p>Enter a stock symbol to get an AI-powered prediction!</p>
-#         </div>
-#     """, unsafe_allow_html=True)
-    
-#     stock_symbol = st.sidebar.text_input("Stock Symbol (e.g., AAPL)", "AAPL")
-#     prediction_days = st.sidebar.slider("Prediction Days", 1, 30, 7)
-
-#     @st.cache_data(ttl=3600)
-#     def get_stock_data(symbol, days=365):
-#         end_date = datetime.now()
-#         start_date = end_date - timedelta(days=days)
-#         try:
-#             data = yf.download(symbol, start=start_date, end=end_date)
-#             return data
-#         except Exception as e:
-#             st.sidebar.error(f"Error fetching data: {e}")
-#             return None
-
-#     def prepare_data(data):
-#         data['Prediction'] = data['Close'].shift(-prediction_days)
-#         data['MA5'] = data['Close'].rolling(window=5).mean()
-#         data['MA20'] = data['Close'].rolling(window=20).mean()
-#         data['RSI'] = calculate_rsi(data['Close'])
-#         data = data.dropna()
-
-#         X = data[['Close', 'Volume', 'MA5', 'MA20', 'RSI']]
-#         y = data['Prediction']
-
-#         return X, y
-
-#     def calculate_rsi(data, periods=14):
-#         delta = data.diff()
-#         gain = (delta.where(delta > 0, 0)).rolling(window=periods).mean()
-#         loss = (-delta.where(delta < 0, 0)).rolling(window=periods).mean()
-#         rs = gain / loss
-#         return 100 - (100 / (1 + rs))
-
-#     def train_model(X, y):
-#         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-#         model = RandomForestRegressor(n_estimators=100, random_state=42)
-#         model.fit(X_train, y_train)
-#         return model
-
-#     if st.sidebar.button("Predict"):
-#         with st.spinner("Fetching data and making predictions..."):
-#             data = get_stock_data(stock_symbol)
-#             if data is not None:
-#                 X, y = prepare_data(data)
-#                 model = train_model(X, y)
-                
-#                 last_data = X.iloc[-1].values.reshape(1, -1)
-#                 prediction = model.predict(last_data)[0]
-#                 current_price = data['Close'].iloc[-1]
-#                 price_change = prediction - current_price
-#                 percent_change = (price_change / current_price) * 100
-
-#                 st.sidebar.markdown(f"""
-#                     <div class="custom-card neon-glow">
-#                         <h4>AI Prediction for {stock_symbol}</h4>
-#                         <p>Current Price: ${current_price:.2f}</p>
-#                         <p>Predicted Price (in {prediction_days} days): ${prediction:.2f}</p>
-#                         <p>Predicted Change: ${price_change:.2f} ({percent_change:.2f}%)</p>
-#                     </div>
-#                 """, unsafe_allow_html=True)
-
-#                 # Visualization
-#                 fig = go.Figure()
-#                 fig.add_trace(go.Scatter(x=data.index, y=data['Close'], name='Historical Close Price'))
-#                 fig.add_trace(go.Scatter(x=[data.index[-1], data.index[-1] + timedelta(days=prediction_days)],
-#                                          y=[current_price, prediction], name='Prediction', line=dict(dash='dash')))
-#                 fig.update_layout(title=f'{stock_symbol} Stock Price Prediction',
-#                                   xaxis_title='Date',
-#                                   yaxis_title='Price ($)',
-#                                   template='plotly_dark')
-#                 st.plotly_chart(fig, use_container_width=True)
-
-#                 # Additional insights
-#                 st.sidebar.markdown("""
-#                     <div class="custom-card">
-#                         <h4>Market Insights</h4>
-#                         <ul>
-#                             <li>Recent trend: {}</li>
-#                             <li>Volume analysis: {}</li>
-#                             <li>RSI indicator: {}</li>
-#                         </ul>
-#                     </div>
-#                 """.format(
-#                     "Upward" if percent_change > 0 else "Downward",
-#                     "High" if data['Volume'].iloc[-1] > data['Volume'].mean() else "Normal",
-#                     "Overbought" if X['RSI'].iloc[-1] > 70 else "Oversold" if X['RSI'].iloc[-1] < 30 else "Neutral"
-#                 ), unsafe_allow_html=True)
-
-#                 st.sidebar.warning("Disclaimer: This prediction is for educational purposes only. Always do your own research before making investment decisions.")
-#             else:
-#                 st.sidebar.error("Failed to fetch stock data. Please try again.")
-
 # Easter egg: Hidden feature
 if st.sidebar.checkbox("🔒 Unlock Hidden Feature", key="hidden_feature"):
     st.sidebar.success("You've discovered a hidden feature! 🎉")
@@ -1131,21 +1029,12 @@ if st.sidebar.checkbox("🔒 Unlock Hidden Feature", key="hidden_feature"):
     def get_stock_data(symbol, days=365):
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
-        attempts = 3  # Number of retry attempts
-
-        for attempt in range(attempts):
-            try:
-                st.sidebar.info(f"Fetching data... Attempt {attempt + 1}")
-                data = yf.download(symbol, start=start_date, end=end_date)
-                if not data.empty:
-                    return data
-                else:
-                    raise ValueError("Empty data received.")
-            except Exception as e:
-                st.sidebar.warning(f"Attempt {attempt + 1} failed: {e}")
-                if attempt == attempts - 1:
-                    st.sidebar.error("Failed to fetch stock data after several attempts. Please try again later.")
-                    return None
+        try:
+            data = yf.download(symbol, start=start_date, end=end_date)
+            return data
+        except Exception as e:
+            st.sidebar.error(f"Error fetching data: {e}")
+            return None
 
     def prepare_data(data):
         data['Prediction'] = data['Close'].shift(-prediction_days)

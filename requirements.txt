@@ -134,3 +134,4 @@ Faker
 python-dateutil
 requests
 pysqlite3-binary
+yfinance

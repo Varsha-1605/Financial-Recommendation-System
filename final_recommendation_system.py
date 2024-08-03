@@ -2,7 +2,6 @@ __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
-
 import streamlit as st
 from faker import Faker
 import random
@@ -11,7 +10,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 from langchain.docstore.document import Document
-from langchain_community.vectorstores import Chroma
+from langchain.vectorstores import SKLearnVectorStore
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
@@ -20,13 +19,8 @@ from openai import OpenAIError
 from openai import APIConnectionError
 from requests.exceptions import ConnectionError
 import os
-import shutil
 import traceback
 import sys
-import tempfile
-
-
-
 
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 
@@ -34,9 +28,7 @@ from langchain.globals import set_verbose
 # Set verbosity level to True to enable detailed logging
 set_verbose(True)
 
-
 st.set_page_config(page_title='MarketWealth Recommender', layout='wide')
-
 
 # Custom CSS for hover effects
 st.markdown("""
@@ -60,10 +52,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
-
-
-
 def global_exception_handler(exctype, value, tb):
     st.error("An unexpected error occurred. Our team has been notified. 🤖")
     # Log the error (in a production environment, you'd want to use a proper logging system)
@@ -80,13 +68,13 @@ sys.excepthook = global_exception_handler
 st.markdown("""
     <style>
     .custom-title {
-        font-size: 65px; /* Adjust size as needed */
+        font-size: 65px;
         font-weight: bold;
-        color: #ff4b4b; /* Title color */
-        text-align: center; /* Center-align the title */
-        text-decoration: underline; /* Underline the text */
-        text-decoration-color: #FFFDD0; /* Color of the underline to match the text */
-        text-decoration-thickness: 2px; /* Thickness of the underline */
+        color: #ff4b4b;
+        text-align: center;
+        text-decoration: underline;
+        text-decoration-color: #FFFDD0;
+        text-decoration-thickness: 2px;
         text-align: center;
         margin-top: 5px;
         margin-bottom: 20px;
@@ -101,28 +89,26 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-
-
 st.markdown("""
     <style>
     .welcome-title {
-        font-size: 50px; /* Adjust the font size */
+        font-size: 50px;
         font-weight: bold;
-        color: #1E90FF; /* Red color to match your theme */
+        color: #1E90FF;
         text-align: center;
-        margin-bottom: 10px; /* Space below the title */
+        margin-bottom: 10px;
     }
     .welcome-text {
-        font-size: 1.25rem; /* Adjust the font size */
-        color: #333333; /* Dark grey for readability */
+        font-size: 1.25rem;
+        color: #333333;
         text-align: center;
-        line-height: 1.6; /* Improve readability */
+        line-height: 1.6;
         margin-top: 0;
-        margin-bottom: 20px; /* Space below the text */
+        margin-bottom: 20px;
     }
     .wave-icon {
-        font-size: 35px; /* Size of the wave emoji */
-        color: #ff4b4b; /* Matching color with the title */
+        font-size: 35px;
+        color: #ff4b4b;
     }
     </style>
     <div class="welcome-title">
@@ -135,9 +121,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-
-
-
 # Tutorial Section
 st.sidebar.markdown("""
     <h1 style="font-size:40px; color:#FFD700;">How to Use 🛠️</h1>
@@ -145,8 +128,6 @@ st.sidebar.markdown("""
     <p>2. Click on 'Get Recommendation' to receive personalized advice.</p>
     <p>3. Provide feedback to help us improve.</p>
 """, unsafe_allow_html=True)
-
-
 
 st.sidebar.markdown('<hr style="border:2px solid #ff4b4b;">', unsafe_allow_html=True)
 
@@ -159,8 +140,6 @@ st.sidebar.markdown(f"""
 feedback = st.sidebar.text_area("Please leave your feedback here:")
 if st.sidebar.button("Submit Feedback"):
     st.sidebar.success("Thank you for your feedback! 👍")
-
-
 
 st.sidebar.markdown('<hr style="border:2px solid #ff4b4b;">', unsafe_allow_html=True)
 
@@ -179,8 +158,6 @@ st.sidebar.markdown(f"""
         <li>What credit card would you recommend for someone who travels frequently? ✈️</li>
     </ol>
 """, unsafe_allow_html=True)
-
-
 
 fake = Faker()
 
@@ -265,7 +242,6 @@ def setup_data_and_vectorstore():
     dataset = generate_dataset(50, months)
 
     df = pd.DataFrame(dataset)
-    # df.to_csv("product_info.csv", index=False)
 
     df['content'] = [f"Based on the following customer data: {data}, suggest suitable banking lending products." for data in dataset]
 
@@ -278,40 +254,29 @@ def setup_data_and_vectorstore():
     max_retries = 5
     retry_delay = 2  # seconds
 
-    persist_directory = tempfile.mkdtemp()
-
-    # Check if the directory exists
-    if os.path.exists(persist_directory):
-        # If it exists, remove it and its contents
-        shutil.rmtree(persist_directory)
-    
-    # Create the directory
-    os.makedirs(persist_directory)
-
     for attempt in range(max_retries):
         try:
-            chroma_store = Chroma.from_documents(
+            sklearn_store = SKLearnVectorStore.from_documents(
                 documents=documents,
-                embedding=openai_embeddings,
-                persist_directory=persist_directory
+                embedding=openai_embeddings
             )
             break
         except (APIConnectionError, ConnectionError) as e:
             if attempt < max_retries - 1:
                 time.sleep(retry_delay)
             else:
-                st.error(f"🔴 Failed to connect to the database after {max_retries} attempts. Please try again later. {str(e)}")
+                st.error(f"🔴 Failed to connect after {max_retries} attempts. Please try again later. {str(e)}")
                 raise e
 
-    return chroma_store
+    return sklearn_store
 
 @st.cache_resource
 def get_vectorstore():
     return setup_data_and_vectorstore()
 
-chroma_store = get_vectorstore()
+sklearn_store = get_vectorstore()
 
-def setup_retrieval_qa(chroma_store):
+def setup_retrieval_qa(sklearn_store):
     try:
         openai_api_key = st.secrets["OPENAI_API_KEY"]
         if not openai_api_key:
@@ -327,7 +292,7 @@ def setup_retrieval_qa(chroma_store):
         retrieval_qa = RetrievalQA.from_chain_type(
             llm=openai_llm,
             chain_type="stuff",
-            retriever=chroma_store.as_retriever()
+            retriever=sklearn_store.as_retriever()
         )
 
         return retrieval_qa
@@ -338,30 +303,28 @@ def setup_retrieval_qa(chroma_store):
         st.error(f":x: Error setting up retrieval QA: {str(e)}")
         raise
 
-retrieval_qa = setup_retrieval_qa(chroma_store)
-
-
+retrieval_qa = setup_retrieval_qa(sklearn_store)
 
 st.markdown("""
     <style>
     .custom-input-label {
-        font-size: 30px; /* Increase the font size */
+        font-size: 30px;
         font-weight: bold;
-        color: #FFD700; /* Blue color for consistency */
-        margin-bottom: 2px; /* Space below the label */
-        display: block; /* Ensures label takes up the full width */
+        color: #FFD700;
+        margin-bottom: 2px;
+        display: block;
     }
     .custom-input {
-        width: 100%; /* Full width of the container */
-        padding: 10px; /* Padding inside the input */
-        font-size: 1rem; /* Font size for the input text */
-        border: 2px solid #ccc; /* Default border color */
-        border-radius: 4px; /* Rounded corners */
-        transition: border-color 0.3s ease; /* Smooth transition for the border color */
+        width: 100%;
+        padding: 10px;
+        font-size: 1rem;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        transition: border-color 0.3s ease;
     }
     .custom-input:focus {
-        border-color: #ff4b4b; /* Red color when the input is focused */
-        outline: none; /* Removes the default outline */
+        border-color: #ff4b4b;
+        outline: none;
     }
     </style>
     <label class="custom-input-label">Enter your query:</label>
@@ -377,7 +340,6 @@ if not question:
 if st.button("Get Recommendation"):
     with st.spinner(":hourglass_flowing_sand: Generating recommendation..."):
         try:
-            # Assuming retrieval_qa is defined and works correctly
             response = retrieval_qa.invoke(question)
             st.write(f"**Answer:** \n{response['result']}")
 

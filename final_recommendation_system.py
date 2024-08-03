@@ -1135,8 +1135,12 @@ if st.sidebar.checkbox("🔒 Unlock Hidden Feature", key="hidden_feature"):
 
         for attempt in range(attempts):
             try:
+                st.sidebar.info(f"Fetching data... Attempt {attempt + 1}")
                 data = yf.download(symbol, start=start_date, end=end_date)
-                return data
+                if not data.empty:
+                    return data
+                else:
+                    raise ValueError("Empty data received.")
             except Exception as e:
                 st.sidebar.warning(f"Attempt {attempt + 1} failed: {e}")
                 if attempt == attempts - 1:
@@ -1220,5 +1224,6 @@ if st.sidebar.checkbox("🔒 Unlock Hidden Feature", key="hidden_feature"):
                 st.sidebar.warning("Disclaimer: This prediction is for educational purposes only. Always do your own research before making investment decisions.")
             else:
                 st.sidebar.error("Failed to fetch stock data. Please try again.")
+
 
 

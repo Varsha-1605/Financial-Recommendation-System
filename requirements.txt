@@ -12,9 +12,7 @@ blinker
 cachetools
 certifi
 charset-normalizer
-chromadb==0.5.5
 click
-clickhouse-connect
 colorama
 comm
 dataclasses-json
@@ -31,7 +29,6 @@ gitdb
 GitPython
 greenlet
 h11
-hnswlib==0.8.0
 httptools
 huggingface-hub
 httpx
@@ -42,14 +39,12 @@ ipython
 jedi
 Jinja2
 joblib
-
 jsonschema
 jupyter_client
 jupyter_core
 langchain
 langchain-openai
 langchain-community
-langchain-chroma
 lz4
 markdown-it-py
 MarkupSafe
@@ -92,7 +87,6 @@ python-dateutil
 python-dotenv
 pytz
 pytz-deprecation-shim
-
 PyYAML==6.0
 pyzmq==25.0.2
 regex
@@ -140,11 +134,3 @@ Faker
 python-dateutil
 requests
 pysqlite3-binary
-
-
-
-
-
-
-
-
